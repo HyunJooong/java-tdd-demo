@@ -1,5 +1,5 @@
 ## :pushpin: PR 제목 규칙
-[STEP0X] 이름
+[STEP0X] HyunJoong 
 
 ---
 ### **핵심 체크리스트** :white_check_mark:
