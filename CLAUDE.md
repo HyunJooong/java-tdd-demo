@@ -58,7 +58,7 @@ Note: Tests are configured with `ignoreFailures = true` in build.gradle.kts, so 
 ### Layer Architecture
 The project follows a standard Spring Boot architecture with these key layers:
 
-1. **Controller Layer** (`io.hhplus.tdd.point.PointController`)
+1. **Controller Layer** (`io.hhplus.tdd.controller.PointController`)
    - REST endpoints for point operations
    - Currently contains TODO stubs for implementation
    - Endpoints: GET /{id}, GET /{id}/histories, PATCH /{id}/charge, PATCH /{id}/use
