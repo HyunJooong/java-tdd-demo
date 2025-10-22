@@ -2,6 +2,7 @@ package io.hhplus.tdd.service;
 
 import io.hhplus.tdd.database.PointHistoryTable;
 import io.hhplus.tdd.database.UserPointTable;
+import io.hhplus.tdd.exception.InsufficientPointException;
 import io.hhplus.tdd.point.PointHistory;
 import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.UserPoint;
@@ -124,10 +125,11 @@ class PointServiceTest {
         long userId = 4L;
         long initialPoint = 1000L;
         long useAmount = 300L;
+        long cost = 10000L;
         userPointTable.insertOrUpdate(userId, initialPoint);
 
         // when: 300L 포인트를 사용
-        UserPoint result = pointService.use(userId, useAmount);
+        UserPoint result = pointService.use(userId, useAmount, cost);
 
         // then: 사용 후 포인트가 700L이 됨
         assertThat(result).isNotNull();

@@ -56,8 +56,9 @@ public class PointController {
     @PatchMapping("{id}/use")
     public UserPoint use(
             @PathVariable long id,
-            @RequestBody long amount
+            @RequestBody long amount,
+            @RequestBody long cost
     ) {
-        return pointService.use(id, amount);
+        return pointService.use(id, amount, cost);
     }
 }
