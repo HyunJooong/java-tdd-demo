@@ -22,7 +22,12 @@ public class PointServiceImpl implements PointService {
     }
 
     @Override
-    public List<PointHistory> getPointHistory(long id) {
-        return pointHistoryTable.selectAllByUserId(id);
+    public List<PointHistory> getPointHistory(long userId) {
+        return pointHistoryTable.selectAllByUserId(userId);
+    }
+
+    @Override
+    public UserPoint charge(long id, long amount) {
+        return userPointTable.insertOrUpdate(id, amount);
     }
 }
