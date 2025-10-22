@@ -16,7 +16,9 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -72,5 +74,25 @@ public class PointControllerTest {
                 .andExpect(jsonPath("$[0].type").value("CHARGE"));
     }
 
+    @Test
+    @DisplayName("특정 유저의 포인트를 충전한다 - RED")
+    void chargeUserPoint() throws Exception {
+        // given
+        long userId = 1L;
+        long chargeAmount = 500L;
+
+        // when - HTTP PATCH 요청 수행
+        ResultActions result = mockMvc.perform(
+                patch("/point/{id}/charge", userId)
+                        .contentType(APPLICATION_JSON)
+                        .content(String.valueOf(chargeAmount))
+        );
+
+        // then - 응답 검증: 정상적인 UserPoint 객체가 반환되어야 함
+        // 현재 Controller는 new UserPoint(0, 0, 0)를 반환하므로 이 테스트는 실패함 (RED)
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(userId))
+                .andExpect(jsonPath("$.point").isNumber());
+    }
 
 }
