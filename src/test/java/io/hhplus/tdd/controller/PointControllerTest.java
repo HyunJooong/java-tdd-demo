@@ -1,6 +1,7 @@
 package io.hhplus.tdd.controller;
 
 import io.hhplus.tdd.point.PointHistory;
+import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.UserPoint;
 import io.hhplus.tdd.service.PointService;
 import org.junit.jupiter.api.DisplayName;
@@ -49,19 +50,27 @@ public class PointControllerTest {
     @Test
     @DisplayName("특정 유저의 포인트 충전/이용 내역을 조회한다")
     void getUserPointHistories() throws Exception {
-        // given
+        // given - Mock 설정: PointService가 포인트 내역을 반환하도록 설정
         long userId = 1L;
         long amount = 1000L;
+        long currentTime = System.currentTimeMillis();
+        List<PointHistory> expectedHistories = List.of(
+                new PointHistory(1L, userId, amount, TransactionType.CHARGE, currentTime)
+        );
+        given(pointService.getPointHistory(anyLong())).willReturn(expectedHistories);
 
-        // when
+        // when - HTTP GET 요청 수행
         ResultActions result = mockMvc.perform(
                 get("/point/{id}/histories", userId)
         );
 
+        // then - 응답 검증
         result.andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))  // 1개를 기대하지만 0개 반환 -> FAIL
+                .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].userId").value(userId))
                 .andExpect(jsonPath("$[0].amount").value(amount))
                 .andExpect(jsonPath("$[0].type").value("CHARGE"));
     }
+
+
 }
