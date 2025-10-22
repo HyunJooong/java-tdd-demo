@@ -3,6 +3,7 @@ package io.hhplus.tdd.service;
 import io.hhplus.tdd.database.PointHistoryTable;
 import io.hhplus.tdd.database.UserPointTable;
 import io.hhplus.tdd.point.PointHistory;
+import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.UserPoint;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -55,5 +56,30 @@ class PointServiceTest {
         // then: 빈 리스트가 아닌 예외가 발생해야 함
         // 현재 구현은 빈 리스트를 반환하므로 이 테스트는 실패함 (RED)
         assertThat(result).isNotEmpty();
+    }
+
+    @Test
+    @DisplayName("특정 유저의 여러 포인트 내역을 조회한다 - GREEN & Refactor")
+    void getPointHistory_withMultipleHistories_success() {
+        // given: 유저 1L의 여러 포인트 내역이 저장되어 있음
+        long userId = 1L;
+        long chargeAmount = 1000L;
+        long useAmount = 500L;
+        long currentTime = System.currentTimeMillis();
+        pointHistoryTable.insert(userId, chargeAmount, TransactionType.CHARGE, currentTime);
+        pointHistoryTable.insert(userId, useAmount, TransactionType.USE, currentTime);
+
+        // when: 유저의 포인트 내역을 조회
+        List<PointHistory> result = pointService.getPointHistory(userId);
+
+        // then: 저장된 모든 내역이 조회됨
+        assertThat(result).isNotEmpty();
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).userId()).isEqualTo(userId);
+        assertThat(result.get(0).amount()).isEqualTo(chargeAmount);
+        assertThat(result.get(0).type()).isEqualTo(TransactionType.CHARGE);
+        assertThat(result.get(1).userId()).isEqualTo(userId);
+        assertThat(result.get(1).amount()).isEqualTo(useAmount);
+        assertThat(result.get(1).type()).isEqualTo(TransactionType.USE);
     }
 }
