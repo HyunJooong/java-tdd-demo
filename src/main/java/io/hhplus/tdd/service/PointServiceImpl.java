@@ -46,7 +46,18 @@ public class PointServiceImpl implements PointService {
 
     @Override
     public UserPoint use(long id, long amount) {
-        long userPoint = -amount;
-        return userPointTable.insertOrUpdate(id, userPoint);
+        // 현재 포인트 조회
+        UserPoint currentUserPoint = getUserPoint(id);
+        long currentPoint = (currentUserPoint == null || currentUserPoint.point() == 0) ? 0 : currentUserPoint.point();
+
+        // 포인트 사용
+        long balance = currentPoint - amount;
+        UserPoint updatedUserPoint = userPointTable.insertOrUpdate(id, balance);
+
+        // 사용 내역 기록
+        long updateMillis = System.currentTimeMillis();
+        pointHistoryTable.insert(id, amount, TransactionType.USE, updateMillis);
+
+        return updatedUserPoint;
     }
 }

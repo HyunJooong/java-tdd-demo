@@ -117,4 +117,28 @@ class PointServiceTest {
         assertThat(histories.get(0).type()).isEqualTo(TransactionType.CHARGE);
     }
 
+    @Test
+    @DisplayName("유저의 포인트를 사용한다")
+    void useUserPoint_success() {
+        // given: 유저 4L의 초기 포인트가 1000L
+        long userId = 4L;
+        long initialPoint = 1000L;
+        long useAmount = 300L;
+        userPointTable.insertOrUpdate(userId, initialPoint);
+
+        // when: 300L 포인트를 사용
+        UserPoint result = pointService.use(userId, useAmount);
+
+        // then: 사용 후 포인트가 700L이 됨
+        assertThat(result).isNotNull();
+        assertThat(result.id()).isEqualTo(userId);
+        assertThat(result.point()).isEqualTo(initialPoint - useAmount);
+
+        // then: 사용 내역이 기록됨
+        List<PointHistory> histories = pointService.getPointHistory(userId);
+        assertThat(histories).hasSize(1);
+        assertThat(histories.get(0).userId()).isEqualTo(userId);
+        assertThat(histories.get(0).amount()).isEqualTo(useAmount);
+        assertThat(histories.get(0).type()).isEqualTo(TransactionType.USE);
+    }
 }
