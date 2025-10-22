@@ -82,4 +82,21 @@ class PointServiceTest {
         assertThat(result.get(1).amount()).isEqualTo(useAmount);
         assertThat(result.get(1).type()).isEqualTo(TransactionType.USE);
     }
+    
+    @Test
+    @DisplayName("포인트가 없는 새로운 유저의 포인트를 충전한다")
+    void chargeUserPoint_newUser_success() {
+        // given: 포인트가 없는 새로운 유저
+        long userId = 2L;
+        long chargeAmount = 1000L;
+
+        // when: 1000L 포인트를 충전
+        UserPoint result = pointService.charge(userId, chargeAmount);
+
+        // then: 충전된 포인트가 반환됨
+        assertThat(result).isNotNull();
+        assertThat(result.id()).isEqualTo(userId);
+        assertThat(result.point()).isEqualTo(chargeAmount);
+    }
+
 }

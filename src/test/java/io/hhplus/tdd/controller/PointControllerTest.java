@@ -75,11 +75,15 @@ public class PointControllerTest {
     }
 
     @Test
-    @DisplayName("특정 유저의 포인트를 충전한다 - RED")
-    void chargeUserPoint() throws Exception {
-        // given
+    @DisplayName("특정 유저의 포인트를 충전한다 - GREEN")
+    void chargeUserPoint_success() throws Exception {
+        // given - Mock 설정: PointService.chargePoint가 충전 후 결과를 반환
         long userId = 1L;
         long chargeAmount = 500L;
+        long expectedPoint = 500L;
+        long currentTime = System.currentTimeMillis();
+        UserPoint expectedUserPoint = new UserPoint(userId, expectedPoint, currentTime);
+        given(pointService.charge(userId, chargeAmount)).willReturn(expectedUserPoint);
 
         // when - HTTP PATCH 요청 수행
         ResultActions result = mockMvc.perform(
@@ -88,11 +92,10 @@ public class PointControllerTest {
                         .content(String.valueOf(chargeAmount))
         );
 
-        // then - 응답 검증: 정상적인 UserPoint 객체가 반환되어야 함
-        // 현재 Controller는 new UserPoint(0, 0, 0)를 반환하므로 이 테스트는 실패함 (RED)
+        // then - 응답 검증: PointService를 통해 충전된 결과가 반환됨
         result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(userId))
-                .andExpect(jsonPath("$.point").isNumber());
+                .andExpect(jsonPath("$.point").value(expectedPoint));
     }
 
 }
