@@ -29,4 +29,12 @@ public interface PointService {
      */
     UserPoint charge(long id, long amount);
 
+    /**
+     * 사용자가 포인트를 사용한다.
+     * @param id 사용자 ID
+     * @param amount 사용 금액
+     * @return
+     */
+    UserPoint use(long id, long amount);
+
 }

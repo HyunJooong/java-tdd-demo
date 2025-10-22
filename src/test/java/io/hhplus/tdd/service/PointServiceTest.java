@@ -83,6 +83,38 @@ class PointServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.id()).isEqualTo(userId);
         assertThat(result.point()).isEqualTo(chargeAmount);
+
+        // then: 충전 내역이 기록됨
+        List<PointHistory> histories = pointService.getPointHistory(userId);
+        assertThat(histories).hasSize(1);
+        assertThat(histories.get(0).userId()).isEqualTo(userId);
+        assertThat(histories.get(0).amount()).isEqualTo(chargeAmount);
+        assertThat(histories.get(0).type()).isEqualTo(TransactionType.CHARGE);
+    }
+
+    @Test
+    @DisplayName("기존 포인트가 있는 유저의 포인트를 추가 충전한다")
+    void chargeUserPoint_existingUser_success() {
+        // given: 유저 3L의 초기 포인트가 500L
+        long userId = 3L;
+        long initialPoint = 500L;
+        long chargeAmount = 1000L;
+        userPointTable.insertOrUpdate(userId, initialPoint);
+
+        // when: 1000L 포인트를 추가 충전
+        UserPoint result = pointService.charge(userId, chargeAmount);
+
+        // then: 충전 후 포인트가 1500L이 됨
+        assertThat(result).isNotNull();
+        assertThat(result.id()).isEqualTo(userId);
+        assertThat(result.point()).isEqualTo(initialPoint + chargeAmount);
+
+        // then: 충전 내역이 기록됨
+        List<PointHistory> histories = pointService.getPointHistory(userId);
+        assertThat(histories).hasSize(1);
+        assertThat(histories.get(0).userId()).isEqualTo(userId);
+        assertThat(histories.get(0).amount()).isEqualTo(chargeAmount);
+        assertThat(histories.get(0).type()).isEqualTo(TransactionType.CHARGE);
     }
 
 }

@@ -3,6 +3,7 @@ package io.hhplus.tdd.service;
 import io.hhplus.tdd.database.PointHistoryTable;
 import io.hhplus.tdd.database.UserPointTable;
 import io.hhplus.tdd.point.PointHistory;
+import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.UserPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,7 +29,24 @@ public class PointServiceImpl implements PointService {
 
     @Override
     public UserPoint charge(long id, long amount) {
+        // 현재 포인트 조회
+        UserPoint currentUserPoint = getUserPoint(id);
+        long currentPoint = (currentUserPoint == null || currentUserPoint.point() == 0) ? 0 : currentUserPoint.point();
 
-        return userPointTable.insertOrUpdate(id, amount);
+        // 포인트 충전
+        long newPoint = currentPoint + amount;
+        UserPoint updatedUserPoint = userPointTable.insertOrUpdate(id, newPoint);
+
+        // 충전 내역 기록
+        long updateMillis = System.currentTimeMillis();
+        pointHistoryTable.insert(id, amount, TransactionType.CHARGE, updateMillis);
+
+        return updatedUserPoint;
+    }
+
+    @Override
+    public UserPoint use(long id, long amount) {
+        long userPoint = -amount;
+        return userPointTable.insertOrUpdate(id, userPoint);
     }
 }
