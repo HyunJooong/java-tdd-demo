@@ -1,5 +1,6 @@
 package io.hhplus.tdd.controller;
 
+import io.hhplus.tdd.point.PointHistory;
 import io.hhplus.tdd.point.UserPoint;
 import io.hhplus.tdd.service.PointService;
 import org.junit.jupiter.api.DisplayName;
@@ -8,6 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
@@ -40,5 +44,24 @@ public class PointControllerTest {
         result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(userId))
                 .andExpect(jsonPath("$.point").value(expectedPoint));
+    }
+
+    @Test
+    @DisplayName("특정 유저의 포인트 충전/이용 내역을 조회한다")
+    void getUserPointHistories() throws Exception {
+        // given
+        long userId = 1L;
+        long amount = 1000L;
+
+        // when
+        ResultActions result = mockMvc.perform(
+                get("/point/{id}/histories", userId)
+        );
+
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))  // 1개를 기대하지만 0개 반환 -> FAIL
+                .andExpect(jsonPath("$[0].userId").value(userId))
+                .andExpect(jsonPath("$[0].amount").value(amount))
+                .andExpect(jsonPath("$[0].type").value("CHARGE"));
     }
 }
