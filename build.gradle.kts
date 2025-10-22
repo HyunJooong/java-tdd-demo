@@ -35,7 +35,7 @@ java {
 }
 
 with(extensions.getByType(JacocoPluginExtension::class.java)) {
-    toolVersion = "0.8.7"
+    toolVersion = "0.8.11"
 }
 
 // bundling tasks
