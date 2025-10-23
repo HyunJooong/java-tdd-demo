@@ -10,6 +10,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +20,16 @@ public class PointServiceImpl implements PointService {
 
     private final UserPointTable userPointTable;
     private final PointHistoryTable pointHistoryTable;
+
+    // 사용자별 Lock을 관리하는 ConcurrentHashMap
+    private final ConcurrentHashMap<Long, Lock> userLocks = new ConcurrentHashMap<>();
+
+    /**
+     * 사용자 ID에 해당하는 Lock을 가져오거나 생성
+     */
+    private Lock getUserLock(long userId) {
+        return userLocks.computeIfAbsent(userId, id -> new ReentrantLock());
+    }
 
     @Override
     public UserPoint getUserPoint(long id) {
@@ -30,57 +43,70 @@ public class PointServiceImpl implements PointService {
 
     @Override
     public UserPoint charge(long id, long amount) {
-        // 현재 포인트 조회
-        UserPoint currentUserPoint = getUserPoint(id);
-        long currentPoint = (currentUserPoint == null || currentUserPoint.point() == 0) ? 0 : currentUserPoint.point();
+        //비관적락 구현
+        Lock lock = getUserLock(id);
+        lock.lock();
+        try {
+            // 현재 포인트 조회
+            UserPoint currentUserPoint = getUserPoint(id);
+            long currentPoint = (currentUserPoint == null || currentUserPoint.point() == 0) ? 0 : currentUserPoint.point();
 
+            //정책1: 포인트 충전은 100만원 이상 할 수 없다.
+            if(amount >= 1000000){
+                throw new InsufficientPointException("포인트를 100만원 이상 충전할 수 없습니다.");
+            }
 
-        //정책1: 포인트 충전은 100만원 이상 할 수 없다.
-        if(amount >= 1000000){
-            throw new InsufficientPointException("포인트를 100만원 이상 충전할 수 없습니다.");
+            // 포인트 충전
+            long newPoint = currentPoint + amount;
+            UserPoint updatedUserPoint = userPointTable.insertOrUpdate(id, newPoint,0);
+
+            // 충전 내역 기록
+            long updateMillis = System.currentTimeMillis();
+            pointHistoryTable.insert(id, amount, TransactionType.CHARGE, updateMillis);
+
+            return updatedUserPoint;
+        } finally {
+            lock.unlock();
         }
-
-        // 포인트 충전
-        long newPoint = currentPoint + amount;
-        UserPoint updatedUserPoint = userPointTable.insertOrUpdate(id, newPoint,0);
-
-        // 충전 내역 기록
-        long updateMillis = System.currentTimeMillis();
-        pointHistoryTable.insert(id, amount, TransactionType.CHARGE, updateMillis);
-
-        return updatedUserPoint;
     }
 
     @Override
     public UserPoint use(long id, long amount, long cost) {
-        // 현재 포인트 조회
-        UserPoint currentUserPoint = getUserPoint(id);
-        long currentPoint = (currentUserPoint == null || currentUserPoint.point() == 0) ? 0 : currentUserPoint.point();
+        //비관적락 구현
+        Lock lock = getUserLock(id);
+        lock.lock();
+        try {
+            // 현재 포인트 조회
+            UserPoint currentUserPoint = getUserPoint(id);
+            long currentPoint = (currentUserPoint == null || currentUserPoint.point() == 0) ? 0 : currentUserPoint.point();
 
-        // 포인트 부족 예외 처리
-        if (currentPoint <= 0 || currentPoint < amount) {
-            throw new InsufficientPointException("포인트가 부족합니다.");
+            // 포인트 부족 예외 처리
+            if (currentPoint <= 0 || currentPoint < amount) {
+                throw new InsufficientPointException("포인트가 부족합니다.");
+            }
+
+            // 정책2: 포인트는 10000원 이하의 가격에는 사용할 수 없다.
+            if (cost <= 10000) {
+                throw new InsufficientPointException("10000원 이하의 가격에는 포인트를 사용할 수 없습니다.");
+            }
+
+            // 정책3: 포인트는 결제 금액의 최대 50%까지만 사용 가능
+            long maxUsablePoint = cost / 2;
+            if (amount > maxUsablePoint) {
+                throw new InsufficientPointException("포인트는 결제 금액의 최대 50%까지만 사용할 수 있습니다.");
+            }
+
+            // 포인트 사용
+            long balance = currentPoint - amount;
+            UserPoint updatedUserPoint = userPointTable.insertOrUpdate(id, balance, cost);
+
+            // 사용 내역 기록
+            long updateMillis = System.currentTimeMillis();
+            pointHistoryTable.insert(id, amount, TransactionType.USE, updateMillis);
+
+            return updatedUserPoint;
+        } finally {
+            lock.unlock();
         }
-
-        // 정책2: 포인트는 10000원 이하의 가격에는 사용할 수 없다.
-        if (cost <= 10000) {
-            throw new InsufficientPointException("10000원 이하의 가격에는 포인트를 사용할 수 없습니다.");
-        }
-
-        // 정책3: 포인트는 결제 금액의 최대 50%까지만 사용 가능
-        long maxUsablePoint = cost / 2;
-        if (amount > maxUsablePoint) {
-            throw new InsufficientPointException("포인트는 결제 금액의 최대 50%까지만 사용할 수 있습니다.");
-        }
-
-        // 포인트 사용
-        long balance = currentPoint - amount;
-        UserPoint updatedUserPoint = userPointTable.insertOrUpdate(id, balance, cost);
-
-        // 사용 내역 기록
-        long updateMillis = System.currentTimeMillis();
-        pointHistoryTable.insert(id, amount, TransactionType.USE, updateMillis);
-
-        return updatedUserPoint;
     }
 }
