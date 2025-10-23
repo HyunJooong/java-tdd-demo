@@ -42,7 +42,7 @@ public class PointServiceImpl implements PointService {
 
         // 포인트 충전
         long newPoint = currentPoint + amount;
-        UserPoint updatedUserPoint = userPointTable.insertOrUpdate(id, newPoint);
+        UserPoint updatedUserPoint = userPointTable.insertOrUpdate(id, newPoint,0);
 
         // 충전 내역 기록
         long updateMillis = System.currentTimeMillis();
@@ -75,7 +75,7 @@ public class PointServiceImpl implements PointService {
 
         // 포인트 사용
         long balance = currentPoint - amount;
-        UserPoint updatedUserPoint = userPointTable.insertOrUpdate(id, balance);
+        UserPoint updatedUserPoint = userPointTable.insertOrUpdate(id, balance, cost);
 
         // 사용 내역 기록
         long updateMillis = System.currentTimeMillis();
