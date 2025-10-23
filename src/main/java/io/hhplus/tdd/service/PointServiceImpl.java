@@ -57,7 +57,7 @@ public class PointServiceImpl implements PointService {
         long currentPoint = (currentUserPoint == null || currentUserPoint.point() == 0) ? 0 : currentUserPoint.point();
 
         // 포인트 부족 예외 처리
-        if (currentPoint <= 0) {
+        if (currentPoint <= 0 || currentPoint < amount) {
             throw new InsufficientPointException("포인트가 부족합니다.");
         }
 

@@ -14,6 +14,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
 class PointServiceTest {
 
@@ -142,5 +145,26 @@ class PointServiceTest {
         assertThat(histories.get(0).userId()).isEqualTo(userId);
         assertThat(histories.get(0).amount()).isEqualTo(useAmount);
         assertThat(histories.get(0).type()).isEqualTo(TransactionType.USE);
+    }
+
+    @Test
+    @DisplayName("현재 포인트(currentPoint)가 사용할 금액(amount)보다 적으면 포인트가 부족해 실패한다")
+    void useUserPoint_whenCurrentPointLessThanAmount_throwsInsufficientPointException() {
+        // given: currentPoint(5000L) < amount(10000L) 상황 설정
+        long userId = 1L;
+        long currentPoint = 5000L;
+        long amount = 10000L;
+        long cost = 20000L;
+
+        userPointTable.insertOrUpdate(userId, currentPoint);
+
+        // when: amount가 currentPoint보다 큰 경우 포인트 사용 시도
+        InsufficientPointException exception = assertThrows(
+                InsufficientPointException.class,
+                () -> pointService.use(userId, amount, cost)
+        );
+
+        // then: "포인트가 부족합니다." 메시지 확인
+        assertEquals("포인트가 부족합니다.", exception.getMessage());
     }
 }
