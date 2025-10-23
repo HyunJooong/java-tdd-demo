@@ -35,10 +35,11 @@ public class PointServiceImpl implements PointService {
         long currentPoint = (currentUserPoint == null || currentUserPoint.point() == 0) ? 0 : currentUserPoint.point();
 
 
-        //정책: 포인트 충전은 100만원 이상 할 수 없다.
+        //정책1: 포인트 충전은 100만원 이상 할 수 없다.
         if(amount >= 1000000){
             throw new InsufficientPointException("포인트를 100만원 이상 충전할 수 없습니다.");
         }
+
         // 포인트 충전
         long newPoint = currentPoint + amount;
         UserPoint updatedUserPoint = userPointTable.insertOrUpdate(id, newPoint);
@@ -61,9 +62,15 @@ public class PointServiceImpl implements PointService {
             throw new InsufficientPointException("포인트가 부족합니다.");
         }
 
-        // 정책: 포인트는 10000원 이하의 가격에는 사용할 수 없다.
+        // 정책2: 포인트는 10000원 이하의 가격에는 사용할 수 없다.
         if (cost <= 10000) {
             throw new InsufficientPointException("10000원 이하의 가격에는 포인트를 사용할 수 없습니다.");
+        }
+
+        // 정책3: 포인트는 결제 금액의 최대 50%까지만 사용 가능
+        long maxUsablePoint = cost / 2;
+        if (amount > maxUsablePoint) {
+            throw new InsufficientPointException("포인트는 결제 금액의 최대 50%까지만 사용할 수 있습니다.");
         }
 
         // 포인트 사용

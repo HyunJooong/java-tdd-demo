@@ -167,4 +167,49 @@ class PointServiceTest {
         // then: "포인트가 부족합니다." 메시지 확인
         assertEquals("포인트가 부족합니다.", exception.getMessage());
     }
+
+    @Test
+    @DisplayName("정책3: 포인트는 결제 금액의 최대 50%까지만 사용할 수 있다")
+    void useUserPoint_whenAmountExceedsMaxUsablePoint_throwsInsufficientPointException() {
+        // given: cost = 20000원, maxUsablePoint = 10000원, amount = 15000원 (50% 초과)
+        long userId = 6L;
+        long currentPoint = 20000L;
+        long cost = 20000L;
+        long amount = 15000L; // cost의 75% (50% 초과)
+        userPointTable.insertOrUpdate(userId, currentPoint);
+
+        // when: amount가 maxUsablePoint(cost / 2)를 초과하는 경우 포인트 사용 시도
+        InsufficientPointException exception = assertThrows(
+                InsufficientPointException.class,
+                () -> pointService.use(userId, amount, cost)
+        );
+
+        // then: "포인트는 결제 금액의 최대 50%까지만 사용할 수 있습니다." 메시지 확인
+        assertEquals("포인트는 결제 금액의 최대 50%까지만 사용할 수 있습니다.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("정책3: 포인트를 결제 금액의 정확히 50%로 사용할 수 있다")
+    void useUserPoint_whenAmountIsExactly50Percent_success() {
+        // given: cost = 20000원, maxUsablePoint = 10000원, amount = 10000원 (정확히 50%)
+        long userId = 7L;
+        long currentPoint = 20000L;
+        long cost = 20000L;
+        long amount = 10000L; // cost의 정확히 50%
+        userPointTable.insertOrUpdate(userId, currentPoint);
+
+        // when: amount가 maxUsablePoint(cost / 2)와 같은 경우 포인트 사용
+        UserPoint result = pointService.use(userId, amount, cost);
+
+        // then: 포인트 사용 성공 및 잔액 확인
+        assertThat(result).isNotNull();
+        assertThat(result.id()).isEqualTo(userId);
+        assertThat(result.point()).isEqualTo(currentPoint - amount);
+
+        // then: 사용 내역이 기록됨
+        List<PointHistory> histories = pointService.getPointHistory(userId);
+        assertThat(histories).hasSize(1);
+        assertThat(histories.get(0).amount()).isEqualTo(amount);
+        assertThat(histories.get(0).type()).isEqualTo(TransactionType.USE);
+    }
 }
