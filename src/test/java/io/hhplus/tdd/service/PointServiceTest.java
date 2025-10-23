@@ -13,10 +13,8 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
 
 class PointServiceTest {
 
@@ -37,7 +35,7 @@ class PointServiceTest {
         // given: 유저 1L의 포인트가 1000L로 저장되어 있음
         long userId = 1L;
         long expectedPoint = 1000L;
-        userPointTable.insertOrUpdate(userId, expectedPoint);
+        userPointTable.insertOrUpdate(userId, expectedPoint,0);
 
         // when: 유저의 포인트를 조회
         UserPoint result = pointService.getUserPoint(userId);
@@ -103,7 +101,7 @@ class PointServiceTest {
         long userId = 3L;
         long initialPoint = 500L;
         long chargeAmount = 1000L;
-        userPointTable.insertOrUpdate(userId, initialPoint);
+        userPointTable.insertOrUpdate(userId, initialPoint,0);
 
         // when: 1000L 포인트를 추가 충전
         UserPoint result = pointService.charge(userId, chargeAmount);
@@ -129,7 +127,7 @@ class PointServiceTest {
         long initialPoint = 1000L;
         long useAmount = 300L;
         long cost = 10000L;
-        userPointTable.insertOrUpdate(userId, initialPoint);
+        userPointTable.insertOrUpdate(userId, initialPoint, cost);
 
         // when: 300L 포인트를 사용
         UserPoint result = pointService.use(userId, useAmount, cost);
@@ -156,7 +154,7 @@ class PointServiceTest {
         long amount = 10000L;
         long cost = 20000L;
 
-        userPointTable.insertOrUpdate(userId, currentPoint);
+        userPointTable.insertOrUpdate(userId, currentPoint, cost);
 
         // when: amount가 currentPoint보다 큰 경우 포인트 사용 시도
         InsufficientPointException exception = assertThrows(
@@ -176,7 +174,7 @@ class PointServiceTest {
         long currentPoint = 20000L;
         long cost = 20000L;
         long amount = 15000L; // cost의 75% (50% 초과)
-        userPointTable.insertOrUpdate(userId, currentPoint);
+        userPointTable.insertOrUpdate(userId, currentPoint,cost);
 
         // when: amount가 maxUsablePoint(cost / 2)를 초과하는 경우 포인트 사용 시도
         InsufficientPointException exception = assertThrows(
@@ -196,7 +194,7 @@ class PointServiceTest {
         long currentPoint = 20000L;
         long cost = 20000L;
         long amount = 10000L; // cost의 정확히 50%
-        userPointTable.insertOrUpdate(userId, currentPoint);
+        userPointTable.insertOrUpdate(userId, currentPoint,cost);
 
         // when: amount가 maxUsablePoint(cost / 2)와 같은 경우 포인트 사용
         UserPoint result = pointService.use(userId, amount, cost);
