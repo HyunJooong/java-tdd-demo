@@ -37,7 +37,7 @@ public class PointControllerTest {
         // given - Mock을 사용하여 PointService의 동작을 시뮬레이션
         long userId = 1L;
         long expectedPoint = 1000L;
-        UserPoint userPoint = new UserPoint(userId, expectedPoint, System.currentTimeMillis());
+        UserPoint userPoint = new UserPoint(userId, expectedPoint, System.currentTimeMillis(),0);
         given(pointService.getUserPoint(anyLong())).willReturn(userPoint);
 
         // when - HTTP GET 요청 수행
@@ -82,7 +82,7 @@ public class PointControllerTest {
         long chargeAmount = 500L;
         long expectedPoint = 500L;
         long currentTime = System.currentTimeMillis();
-        UserPoint expectedUserPoint = new UserPoint(userId, expectedPoint, currentTime);
+        UserPoint expectedUserPoint = new UserPoint(userId, expectedPoint, currentTime,0);
         given(pointService.charge(userId, chargeAmount)).willReturn(expectedUserPoint);
 
         // when - HTTP PATCH 요청 수행

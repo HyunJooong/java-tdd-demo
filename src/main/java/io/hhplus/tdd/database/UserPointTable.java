@@ -20,9 +20,9 @@ public class UserPointTable {
         return table.getOrDefault(id, UserPoint.empty(id));
     }
 
-    public UserPoint insertOrUpdate(long id, long amount) {
+    public UserPoint insertOrUpdate(long id, long amount, long cost) {
         throttle(300);
-        UserPoint userPoint = new UserPoint(id, amount, System.currentTimeMillis());
+        UserPoint userPoint = new UserPoint(id, amount, System.currentTimeMillis(),cost);
         table.put(id, userPoint);
         return userPoint;
     }

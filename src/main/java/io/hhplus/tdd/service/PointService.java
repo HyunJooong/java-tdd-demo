@@ -35,6 +35,6 @@ public interface PointService {
      * @param amount 사용 금액
      * @return
      */
-    UserPoint use(long id, long amount);
+    UserPoint use(long id, long amount, long cost);
 
 }
